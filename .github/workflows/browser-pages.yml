@@ -1,29 +1,38 @@
 name: Browser runtime
+
 on:
   push:
     branches: [main]
     paths: ['browser/**', '.github/workflows/browser-pages.yml']
   workflow_dispatch:
+
 permissions:
   contents: read
   pages: write
   id-token: write
+
 concurrency:
   group: pages
   cancel-in-progress: true
+
 jobs:
-  build:
+  build-and-deploy:
     runs-on: ubuntu-latest
     timeout-minutes: 45
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - name: Check out Try Omarchy
         uses: actions/checkout@v4
+
       - name: Check out qemu-wasm
         uses: actions/checkout@v4
         with:
           repository: ktock/qemu-wasm
           ref: master
           path: .build/qemu-wasm
+
       - name: Build qemu-system-aarch64.wasm
         working-directory: .build/qemu-wasm
         run: |
@@ -37,23 +46,15 @@ jobs:
           docker cp build-qemu-wasm:/build/qemu-system-aarch64.wasm "$GITHUB_WORKSPACE/browser/qemu/"
           docker cp build-qemu-wasm:/build/qemu-system-aarch64.worker.js "$GITHUB_WORKSPACE/browser/qemu/"
           docker rm -f build-qemu-wasm
-      - name: Prepare Pages site
-        run: |
-          mkdir -p site
-          cp -R browser/. site/
-      - name: Configure Pages
+
+      - name: Configure GitHub Pages
         uses: actions/configure-pages@v5
-      - name: Upload Pages artifact
+
+      - name: Upload browser runtime
         uses: actions/upload-pages-artifact@v3
         with:
-          path: site
-  deploy:
-    needs: build
-    runs-on: ubuntu-latest
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
-    steps:
-      - name: Deploy to GitHub Pages
+          path: browser
+
+      - name: Deploy directly to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
