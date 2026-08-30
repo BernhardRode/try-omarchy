@@ -1,23 +1,26 @@
+import 'https://unpkg.com/xterm@5.3.0/lib/xterm.js';
+import 'https://unpkg.com/xterm-pty/index.js';
+import { boot } from './module.js';
 const status = document.querySelector('#status');
-const consoleEl = document.querySelector('#console');
 const start = document.querySelector('#start');
-function log(message) { consoleEl.textContent += `${message}\n`; }
-start.addEventListener('click', () => {
+const terminal = new Terminal({ convertEol: true, cursorBlink: true });
+terminal.open(document.querySelector('#terminal'));
+start.addEventListener('click', async () => {
   const image = document.querySelector('#image').files[0];
   const kernel = document.querySelector('#kernel').files[0];
   const initramfs = document.querySelector('#initramfs').files[0];
-  consoleEl.textContent = '';
-  log('Try Omarchy browser runtime');
-  log('Target: AArch64 guest');
-  log('Runtime: ktock/qemu-wasm');
-  if (!image) { status.textContent = 'Select the guest rootfs image first.'; log('No guest image selected.'); return; }
-  status.textContent = 'Preparing browser VM…';
-  log(`Disk: ${image.name} (${Math.round(image.size / 1048576)} MiB)`);
-  log(`Kernel: ${kernel ? kernel.name : 'not selected'}`);
-  log(`Initramfs: ${initramfs ? initramfs.name : 'not selected'}`);
-  log('');
-  log('Browser UI is ready for the qemu-wasm AArch64 bundle.');
-  log('The multi-GB VM image is intentionally supplied separately.');
-  log('Next: wire qemu-system-aarch64.wasm to these artifacts.');
-  status.textContent = 'Browser runtime shell ready; QEMU WASM bundle not bundled yet.';
+  if (!image) { status.textContent = 'Select the guest rootfs image first.'; return; }
+  status.textContent = 'Starting AArch64 QEMU in WebAssembly…';
+  start.disabled = true;
+  terminal.clear();
+  const { master, slave } = openpty();
+  terminal.loadAddon(master);
+  try {
+    await boot({ image, kernel, initramfs, pty: slave });
+    status.textContent = 'VM exited.';
+  } catch (error) {
+    console.error(error);
+    terminal.write(`\r\n\x1b[31mQEMU failed: ${error}\x1b[0m\r\n`);
+    status.textContent = 'VM failed to start; see the browser console.';
+  } finally { start.disabled = false; }
 });
