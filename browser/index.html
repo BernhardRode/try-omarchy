@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Try Omarchy — Browser Runtime</title>
+  <link rel="stylesheet" href="./style.css">
+</head>
+<body>
+  <header>
+    <div><strong>Try Omarchy</strong> <span class="badge">Browser runtime · experimental</span></div>
+    <button id="start" type="button">Start VM</button>
+  </header>
+  <main>
+    <section class="controls">
+      <label>Guest image <input id="image" type="file" accept=".img,.raw,.ext4,.zst,.gz"></label>
+      <label>Kernel <input id="kernel" type="file" accept=".img,.bin,.gz"></label>
+      <label>Initramfs <input id="initramfs" type="file" accept=".img,.gz"></label>
+      <p id="status">Choose the ARM64 guest artifacts, then start the VM. The browser runtime uses qemu-wasm.</p>
+    </section>
+    <pre id="console" aria-label="VM console"></pre>
+  </main>
+  <script type="module" src="./app.js"></script>
+</body>
+</html>
