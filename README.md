@@ -8,6 +8,23 @@ Try Omarchy packages a project-built ARM64 Arch Linux image configured with Omar
 
 Try Omarchy is not official or affiliated with Omarchy.
 
+## Browser runtime (experimental)
+
+A second runtime is now being developed under `browser/`. It uses [ktock/qemu-wasm](https://github.com/ktock/qemu-wasm) to emulate the same AArch64 Linux guest inside WebAssembly. QEMU Wasm documents an AArch64 system target and browser JIT/MTTCG support.
+
+The browser runtime is intentionally separate from the macOS runtime: it does not use Hypervisor.framework, Swift, AppKit, or VirGL. The current milestone boots the existing guest through a browser terminal using QEMU's `virt` machine. Graphical Hyprland/WebGPU output is a later milestone.
+
+GitHub Pages builds `qemu-system-aarch64` from the pinned upstream QEMU Wasm project and publishes the browser shell. The VM disk is **not** committed to Git or Pages: GitHub Pages has per-file limits that make the multi-gigabyte guest image unsuitable for static hosting. The browser UI accepts the existing `dist/guest/rootfs.ext4`, kernel, and initramfs artifacts locally so the first runtime can be tested without changing the guest image format.
+
+### Browser development
+
+1. Build the normal guest with `make guest` on the supported ARM64 Linux builder path.
+2. Open the browser runtime from the repository's GitHub Pages site after the `Browser runtime` workflow succeeds.
+3. Select `dist/guest/rootfs.ext4`, `dist/guest/vmlinuz-linux`, and `dist/guest/initramfs-linux.img`.
+4. Start the VM.
+
+The browser implementation is experimental and currently targets a serial console rather than the full graphical desktop.
+
 ## Highlights
 
 - Hardware-accelerated ARM64 virtualization and VirGL graphics
@@ -219,6 +236,7 @@ Maintainers should follow [`docs/releasing.md`](docs/releasing.md) for the full 
 .
 ├── Makefile                 public build interface
 ├── macos/                   Swift launcher and QEMU/HVF runtime builder
+├── browser/                 experimental WebAssembly/QEMU runtime
 ├── guest/                   reproducible ARM64 factory-image builder
 ├── docs/                    architecture and release documentation
 ├── dist/                    generated output (ignored)
